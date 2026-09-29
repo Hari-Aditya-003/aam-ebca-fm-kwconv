@@ -1,0 +1,11 @@
+# Core notebook and data-preparation dependencies
+numpy>=1.26
+opencv-python>=4.9
+scipy>=1.10
+pillow>=10.0
+
+# Training, validation, and proposed-module smoke test
+torch>=2.2
+ultralytics>=8.3
+
+# AdaBins is installed from its official repository separately; see notebook cell 10.
