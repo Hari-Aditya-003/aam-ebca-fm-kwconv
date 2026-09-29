@@ -1,0 +1,16 @@
+# Keep local data, code drafts, and generated results out of this repository.
+/Dataset/
+/Coding/
+/Results/
+
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.zip
+*.tar
+*.gz
