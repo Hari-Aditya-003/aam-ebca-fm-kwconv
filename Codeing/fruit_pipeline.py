@@ -819,6 +819,62 @@ if nn is not None:
             return self.kw_p3(p3), self.kw_p4(p4), self.kw_p5(p5)
 
 
+    class EnhancedDetectHead(nn.Module):
+        """Apply the proposed P3/P4/P5 enhancement directly before YOLO Detect.
+
+        The wrapper retains the original Ultralytics ``Detect`` head and its
+        learned weights.  It only replaces the three incoming FPN features with
+        AAM–EBCA–FM–KWConv-enhanced versions, so detection loss and decoding
+        remain the upstream implementation.
+        """
+
+        def __init__(self, detect: Any, channels: Sequence[int]) -> None:
+            super().__init__()
+            if len(channels) != 3:
+                raise ValueError("The proposed neck requires P3, P4, and P5 channels.")
+            self.detect = detect
+            self.enhancement = ProposedEnhancementNeck(*channels)
+            # Ultralytics' graph runner reads these metadata attributes from
+            # every module in its sequential model.
+            self.i = getattr(detect, "i", None)
+            self.f = getattr(detect, "f", None)
+            self.type = f"{self.__class__.__module__}.{self.__class__.__name__}"
+            self.np = sum(parameter.numel() for parameter in self.parameters())
+
+        @property
+        def stride(self) -> Any:
+            return self.detect.stride
+
+        @property
+        def nc(self) -> int:
+            return self.detect.nc
+
+        @property
+        def nl(self) -> int:
+            return self.detect.nl
+
+        @property
+        def no(self) -> int:
+            return self.detect.no
+
+        @property
+        def reg_max(self) -> int:
+            return self.detect.reg_max
+
+        @property
+        def dfl(self) -> Any:
+            return self.detect.dfl
+
+        @property
+        def max_det(self) -> int:
+            return self.detect.max_det
+
+        def forward(self, features: Sequence[Any]) -> Any:
+            if len(features) != 3:
+                raise ValueError("Expected three detection features: P3, P4, and P5.")
+            return self.detect(list(self.enhancement(*features)))
+
+
 else:
 
     class _TorchMissing:
@@ -846,6 +902,10 @@ else:
         pass
 
 
+    class EnhancedDetectHead(_TorchMissing):
+        pass
+
+
 def module_smoke_test(paths: ProjectPaths, device: str = "cpu") -> dict[str, Any]:
     """Validate the proposed module tensor interfaces before Ultralytics integration."""
     if torch is None:
@@ -860,6 +920,36 @@ def module_smoke_test(paths: ProjectPaths, device: str = "cpu") -> dict[str, Any
     report = {"output_shapes": [list(output.shape) for output in outputs], "device": device}
     _write_json(paths.results / "architecture_smoke_test.json", report)
     return report
+
+
+def patch_yolov8_detection_head(yolo: Any) -> Any:
+    """Insert AAM–EBCA–FM–KWConv immediately before a YOLOv8 Detect head.
+
+    ``yolo`` can be an Ultralytics ``YOLO`` object or its underlying detection
+    model. The function supports standard three-scale YOLOv8 models and keeps
+    the pretrained backbone/Detect weights intact.
+    """
+    if torch is None:
+        _require_torch()
+    # ``YOLO.model`` is the DetectionModel, while ``DetectionModel.model`` is
+    # the graph's sequential module list. Distinguish the two nesting levels so
+    # callers may pass either public Ultralytics object.
+    candidate_model = getattr(yolo, "model", None)
+    detection_model = candidate_model if candidate_model is not None and hasattr(candidate_model, "model") else yolo
+    modules = getattr(detection_model, "model", None)
+    if modules is None or len(modules) == 0:
+        raise TypeError("Expected an Ultralytics YOLO detection model with a module list.")
+    head = modules[-1]
+    if isinstance(head, EnhancedDetectHead):
+        return yolo
+    try:
+        channels = tuple(int(branch[0].conv.in_channels) for branch in head.cv2)
+    except (AttributeError, IndexError, TypeError) as error:
+        raise TypeError("Expected a standard three-scale Ultralytics Detect head.") from error
+    if len(channels) != 3:
+        raise ValueError(f"Expected three YOLO detection scales; found {len(channels)}.")
+    modules[-1] = EnhancedDetectHead(head, channels)
+    return yolo
 
 
 class AdaBinsDepth:
@@ -1164,6 +1254,65 @@ def train_baseline_yolov8(
         scale=0.20,
         mosaic=0.10,
         erasing=0.10,
+    )
+
+
+def train_proposed_yolov8(
+    paths: ProjectPaths,
+    *,
+    model_name: str = "yolov8n.pt",
+    epochs: int = 100,
+    image_size: int = 1024,
+    batch: int | float = -1,
+    device: str | int | None = None,
+    run_name: str = "aam_ebca_fm_kwconv_auto",
+    **trainer_overrides: Any,
+) -> Any:
+    """Train YOLOv8 with AAM–EBCA–FM–KWConv inserted before Detect.
+
+    Ultralytics reconstructs a model when ``YOLO.train`` starts. A custom
+    trainer patches the freshly reconstructed two-class model, rather than only
+    patching the initial 80-class checkpoint in memory. This guarantees the
+    proposed neck is part of the trainable model and saved checkpoint.
+    """
+    validation = validate_yolo_dataset(paths)
+    if not validation["valid"]:
+        raise ValueError("Every YOLO image needs an automatic label file before training.")
+    YOLO = _require_ultralytics()
+    try:
+        from ultralytics.models.yolo.detect import DetectionTrainer
+    except ModuleNotFoundError as error:
+        raise RuntimeError("The installed Ultralytics package does not provide DetectionTrainer.") from error
+
+    class ProposedFruitTrainer(DetectionTrainer):
+        def get_model(self, cfg: Any = None, weights: Any = None, verbose: bool = True) -> Any:
+            model = super().get_model(cfg=cfg, weights=weights, verbose=verbose)
+            patch_yolov8_detection_head(model)
+            return model
+
+    model = YOLO(model_name)
+    return model.train(
+        trainer=ProposedFruitTrainer,
+        data=str(paths.yolo_yaml),
+        epochs=epochs,
+        imgsz=image_size,
+        batch=batch,
+        device=device,
+        project=str(paths.training_results),
+        name=run_name,
+        exist_ok=True,
+        # Colour is a class attribute, so avoid hue jitter that can swap labels.
+        hsv_h=0.0,
+        hsv_s=0.20,
+        hsv_v=0.20,
+        fliplr=0.50,
+        flipud=0.0,
+        degrees=5.0,
+        translate=0.05,
+        scale=0.20,
+        mosaic=0.10,
+        erasing=0.10,
+        **trainer_overrides,
     )
 
 
