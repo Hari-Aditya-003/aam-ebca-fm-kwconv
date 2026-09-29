@@ -59,12 +59,21 @@ class ProjectPaths:
         return self.dataset / "labels" / "seed_candidates"
 
     @property
+    def auto_labels(self) -> Path:
+        """Pseudo-labels created by the automatic apple detector."""
+        return self.dataset / "labels" / "auto"
+
+    @property
     def verified_labels(self) -> Path:
         return self.dataset / "labels" / "verified"
 
     @property
     def seed_previews(self) -> Path:
         return self.dataset / "labels" / "seed_previews"
+
+    @property
+    def auto_previews(self) -> Path:
+        return self.dataset / "labels" / "auto_previews"
 
     @property
     def manifests(self) -> Path:
@@ -109,8 +118,10 @@ class ProjectPaths:
             self.results,
             self.frames,
             self.seed_labels,
+            self.auto_labels,
             self.verified_labels,
             self.seed_previews,
+            self.auto_previews,
             self.manifests,
             self.augmented_images,
             self.augmented_labels,
@@ -213,6 +224,12 @@ def extract_uniform_frames(
 
     requested = min(max_frames, max(1, math.ceil(total_frames / source_fps * sample_fps)))
     indices = np.unique(np.linspace(0, total_frames - 1, requested, dtype=np.int64))
+    if overwrite:
+        # ``frames/raw`` contains generated frame extractions only. Clearing the
+        # old names avoids mixing separate sampling runs (for example a previous
+        # 5 FPS run with a new exact-800 run) in one training dataset.
+        for existing_frame in paths.frames.glob("frame_*_src_*.jpg"):
+            existing_frame.unlink()
     capture = cv2.VideoCapture(str(input_video))
     manifest: list[dict[str, Any]] = []
     try:
@@ -488,20 +505,34 @@ def build_temporal_yolo_dataset(
     *,
     train_fraction: float = 0.70,
     val_fraction: float = 0.10,
+    label_directory: str | Path | None = None,
 ) -> dict[str, int]:
-    """Copy manually verified labels into temporally disjoint YOLO splits.
+    """Copy one label set into temporally disjoint YOLO splits.
 
     The split happens *before* augmentation. This prevents adjacent video frames
     or an augmented copy of a validation/test frame leaking into training.
+
+    ``label_directory`` may be the manually verified labels folder or the
+    automatic pseudo-labels folder. Every raw frame must have a label file;
+    empty files deliberately encode automatic negative detections.
     """
     images = sorted(paths.frames.glob("*.jpg"))
+    source_labels = Path(label_directory) if label_directory is not None else paths.verified_labels
     pairs = []
+    missing_labels = []
     for image_path in images:
-        label_path = paths.verified_labels / f"{image_path.stem}.txt"
-        if label_path.exists():
-            # Parsing here catches malformed labels before training begins.
-            read_yolo_labels(label_path)
-            pairs.append((image_path, label_path))
+        label_path = source_labels / f"{image_path.stem}.txt"
+        if not label_path.exists():
+            missing_labels.append(image_path.name)
+            continue
+        # Parsing here catches malformed labels before training begins.
+        read_yolo_labels(label_path)
+        pairs.append((image_path, label_path))
+    if missing_labels:
+        raise ValueError(
+            f"{len(missing_labels)} images have no label file in {source_labels}. "
+            "Run automatic labelling again so each image has a label file (possibly empty)."
+        )
     train_count, val_count, _ = _split_counts(len(pairs), train_fraction, val_fraction)
     split_pairs = {
         "train": pairs[:train_count],
@@ -512,7 +543,14 @@ def build_temporal_yolo_dataset(
     for split, items in split_pairs.items():
         for image_path, label_path in items:
             _copy_pair(image_path, label_path, paths.yolo_images / split, paths.yolo_labels / split)
-            manifest.append({"image": image_path.name, "split": split, "label": label_path.name})
+            manifest.append(
+                {
+                    "image": image_path.name,
+                    "split": split,
+                    "label": label_path.name,
+                    "label_directory": str(source_labels),
+                }
+            )
     _write_jsonl(paths.manifests / "temporal_split.jsonl", manifest)
     _write_dataset_yaml(paths)
     return {split: len(items) for split, items in split_pairs.items()}
