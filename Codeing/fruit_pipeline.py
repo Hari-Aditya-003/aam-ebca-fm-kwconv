@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 import random
 import shutil
 import subprocess
@@ -831,7 +832,9 @@ class AdaBinsDepth:
     relative foreground/background gating, not metric distance claims.
     """
 
-    def __init__(self, repository: str | Path, dataset: str = "nyu") -> None:
+    def __init__(
+        self, repository: str | Path, dataset: str = "kitti", device: str | None = None
+    ) -> None:
         repository_path = Path(repository).expanduser().resolve()
         if not (repository_path / "infer.py").exists():
             raise FileNotFoundError(
@@ -843,15 +846,25 @@ class AdaBinsDepth:
             from infer import InferenceHelper
         except ModuleNotFoundError as error:
             raise RuntimeError("AdaBins dependencies are missing in the current notebook kernel.") from error
-        self._helper = InferenceHelper(dataset=dataset)
+        # The upstream helper resolves pretrained weights relative to the
+        # current directory and defaults to CUDA. Keep those legacy assumptions
+        # contained here so the notebook works on this CPU-only workstation.
+        selected_device = device or ("cuda:0" if torch is not None and torch.cuda.is_available() else "cpu")
+        previous_directory = Path.cwd()
+        try:
+            os.chdir(repository_path)
+            self._helper = InferenceHelper(dataset=dataset, device=selected_device)
+        finally:
+            os.chdir(previous_directory)
 
     def predict(self, bgr_frame: np.ndarray) -> np.ndarray:
-        try:
-            from PIL import Image
-        except ModuleNotFoundError as error:
-            raise RuntimeError("Pillow is required by the AdaBins adapter.") from error
+        if torch is None:
+            _require_torch()
         rgb = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
-        _, depth = self._helper.predict_pil(Image.fromarray(rgb))
+        # Call the model helper with a tensor directly. Its legacy PIL adapter
+        # uses ``np.array(..., copy=False)`` which is incompatible with NumPy 2.
+        image = torch.from_numpy(rgb.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
+        _, depth = self._helper.predict(image.to(self._helper.device))
         depth_map = np.asarray(depth).squeeze().astype(np.float32)
         return cv2.resize(depth_map, (bgr_frame.shape[1], bgr_frame.shape[0]), interpolation=cv2.INTER_LINEAR)
 

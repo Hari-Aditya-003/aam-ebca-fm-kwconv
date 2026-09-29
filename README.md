@@ -13,8 +13,13 @@ Green/yellow apple detection, relative-depth localization, and duplicate-safe or
 Open [AAM, EBCA, FM, KWConv 100.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100.ipynb>) and run its cells in order. The reusable implementation is [fruit_pipeline.py](Codeing/fruit_pipeline.py).
 
 ```bash
-python -m pip install -r Codeing/requirements.txt
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r Codeing/requirements.txt
+.venv/bin/python -m ipykernel install --user --name fruitvision --display-name "FruitVision (.venv)"
 ```
+
+The main environment includes the CPU builds of PyTorch, Ultralytics YOLOv8, JupyterLab, LabelImg, OpenCV, and SciPy. The local install also includes the official outdoor AdaBins source/checkpoint in `third_party/AdaBins/`; it is excluded from Git because the checkpoint is large and AdaBins is GPL-3.0. Use its output only as relative depth until the orchard camera is calibrated.
 
 The workflow saves extracted frames, seed candidates, manually verified labels, augmentations, and YOLO splits under `Dataset/`; it saves architecture checks, training outputs, metrics, annotated videos, track CSVs, and summaries under `Results/`.
 

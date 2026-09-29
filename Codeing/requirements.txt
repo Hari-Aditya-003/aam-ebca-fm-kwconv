@@ -3,9 +3,16 @@ numpy>=1.26
 opencv-python>=4.9
 scipy>=1.10
 pillow>=10.0
+tqdm>=4.66
+gdown>=5.2
 
 # Training, validation, and proposed-module smoke test
 torch>=2.2
 ultralytics>=8.3
+
+# Notebook and desktop annotation application
+jupyterlab>=4.0
+ipykernel>=6.0
+labelImg>=1.8.6
 
 # AdaBins is installed from its official repository separately; see notebook cell 10.
