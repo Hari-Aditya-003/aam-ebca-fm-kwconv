@@ -30,7 +30,6 @@ The `RUN_...` flags make expensive or file-writing stages explicit. They are `Fa
 Codeing/
   AAM, EBCA, FM, KWConv 100.ipynb  # documented research notebook
   AAM, EBCA, FM, KWConv 100 (5) (3).ipynb  # supplied reference notebook
-  fruit_pipeline.py                # reusable workflow and model implementation
   requirements.txt
 Dataset/                            # local-only: video, frames, images, labels, manifests
 Results/                            # local-only: audits, training, metrics, video, tracks
@@ -54,4 +53,4 @@ Automatic COCO-derived labels are pseudo-labels. They enable a fully automatic d
 
 ## Data and result policy
 
-`Dataset/`, `Results/`, checkpoints, videos, generated frames, labels, and third-party AdaBins weights are ignored by Git. The repository stores the implementation, notebook, dependencies, and documentation only.
+`Dataset/`, `Results/`, checkpoints, videos, generated frames, labels, and third-party AdaBins weights are ignored by Git. The complete implementation, workflow, and documentation are contained in the main notebook; no project `.py` source file is required.
