@@ -2,6 +2,19 @@
 
 Cell-by-cell research workflow for green-apple detection, relative-depth localization, and duplicate-safe orchard counting.
 
+## Current training snapshot
+
+Training was active when this snapshot was recorded on **30 September 2026 at 20:56 IST**. The run has completed **65 of 300 epochs (21.7%)**.
+
+| Metric | Latest (epoch 65) | Best observed | Best epoch |
+|---|---:|---:|---:|
+| Precision | 0.80084 | 0.82107 | 36 |
+| Recall | 0.71182 | 0.71746 | 48 |
+| mAP@0.50 | 0.79950 | 0.81440 | 28 |
+| mAP@0.50:0.95 | 0.57659 | 0.58744 | 24 |
+
+These values are provisional validation metrics against automatically generated pseudo-labels; they are not final independent-ground-truth results. See the [results summary](Results/README.md), [live-status snapshot](Results/status/live_training_status.json), and [per-epoch metrics](Results/training/aam_ebca_fm_kwconv_green/results.csv).
+
 ## Objectives
 
 - Detect small, overlapping, and partially occluded green apples with an enhanced YOLOv8 neck: Attribute Attention Module (AAM), Efficient Bidirectional Cross-Attention (EBCA), Focal Modulation (FM), and Kernel Warehouse Convolution (KWConv).
@@ -10,7 +23,7 @@ Cell-by-cell research workflow for green-apple detection, relative-depth localiz
 
 ## Notebook workflow
 
-Open [AAM, EBCA, FM, KWConv 100.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100.ipynb>) and run cells in order.
+Open [AAM, EBCA, FM, KWConv 100.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100.ipynb>) and run cells in order. Use [AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb>) to inspect progress and generate final result artifacts without changing the training workflow.
 
 1. Check PyTorch, CUDA, and NVIDIA-driver availability.
 2. Inspect `Dataset/DJI_0418.MP4`: 3,825 source frames at 59.940 FPS, 1,920×1,080.
@@ -29,10 +42,11 @@ The `RUN_...` flags make expensive or file-writing stages explicit. They are `Fa
 ```text
 Codeing/
   AAM, EBCA, FM, KWConv 100.ipynb  # documented research notebook
+  AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb  # monitoring and result export
   AAM, EBCA, FM, KWConv 100 (5) (3).ipynb  # supplied reference notebook
   requirements.txt
 Dataset/                            # local-only: video, frames, images, labels, manifests
-Results/                            # local-only: audits, training, metrics, video, tracks
+Results/                            # curated reports tracked; large/generated artifacts local-only
 third_party/AdaBins/                # local AdaBins source/checkpoint (not committed)
 ```
 
@@ -53,4 +67,4 @@ Automatic COCO-derived labels are pseudo-labels. They enable a fully automatic d
 
 ## Data and result policy
 
-`Dataset/`, `Results/`, checkpoints, videos, generated frames, labels, and third-party AdaBins weights are ignored by Git. The complete implementation, workflow, and documentation are contained in the main notebook; no project `.py` source file is required.
+`Dataset/` is always local and is never committed. The repository includes only curated aggregate results such as status JSON, per-epoch metrics, runtime information, module smoke-test output, and final plots when available. Checkpoints, videos, generated frames, labels, dataset-derived previews, and third-party AdaBins weights remain ignored. The complete implementation and workflow are contained in the notebooks; no project `.py` source file is required.

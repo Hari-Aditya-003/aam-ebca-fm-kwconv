@@ -1,0 +1,15 @@
+{
+  "running_kernel": "7.0.0-34-generic",
+  "nvidia_kernel_module_present": true,
+  "torch_version": "2.14.0+cu132",
+  "cuda_available": true,
+  "cuda_device_count": 1,
+  "cuda_device": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+  "cuda_capability": [
+    8,
+    6
+  ],
+  "nvidia_smi_returncode": 0,
+  "nvidia_smi": "NVIDIA GeForce RTX 3050 Ti Laptop GPU, 595.91.07, 4096 MiB",
+  "recommended_device": 0
+}

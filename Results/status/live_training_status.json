@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "checked_utc": "2026-09-30T15:26:45Z",
+  "training_csv": "Results/training/aam_ebca_fm_kwconv_green/results.csv",
+  "configured_epochs": 300,
+  "completed_epochs": 65,
+  "progress_percent": 21.67,
+  "training_complete": false,
+  "active_at_snapshot": true,
+  "latest": {
+    "epoch": 65,
+    "elapsed_seconds": 26918.1,
+    "precision": 0.80084,
+    "recall": 0.71182,
+    "map50": 0.7995,
+    "map50_95": 0.57659,
+    "train_box_loss": 0.6227,
+    "train_cls_loss": 0.42225,
+    "train_dfl_loss": 0.78632,
+    "val_box_loss": 0.96137,
+    "val_cls_loss": 0.67509,
+    "val_dfl_loss": 0.82814
+  },
+  "best_observed": {
+    "precision": {
+      "value": 0.82107,
+      "epoch": 36
+    },
+    "recall": {
+      "value": 0.71746,
+      "epoch": 48
+    },
+    "map50": {
+      "value": 0.8144,
+      "epoch": 28
+    },
+    "map50_95": {
+      "value": 0.58744,
+      "epoch": 24
+    }
+  },
+  "checkpoints": {
+    "best_pt_present_locally": true,
+    "last_pt_present_locally": true,
+    "published_to_git": false
+  },
+  "evaluation_notice": "Provisional validation metrics against automatically generated pseudo-labels; not independent ground truth."
+}

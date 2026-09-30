@@ -1,8 +1,43 @@
-# Keep local data, code drafts, and generated results out of this repository.
+# Keep local data, code drafts, and third-party sources out of this repository.
 /Dataset/
 /Coding/
-/Results/
 /third_party/
+
+# Ignore generated results by default. Publish only the small, aggregate reports
+# explicitly allowed below; raw predictions, dataset-derived images, videos, and
+# checkpoints remain local.
+/Results/*
+!/Results/README.md
+
+!/Results/architecture/
+/Results/architecture/*
+!/Results/architecture/module_smoke_test.json
+
+!/Results/hardware/
+/Results/hardware/*
+!/Results/hardware/runtime.json
+
+!/Results/status/
+/Results/status/*
+!/Results/status/live_training_status.json
+
+!/Results/training/
+/Results/training/*
+!/Results/training/aam_ebca_fm_kwconv_green/
+/Results/training/aam_ebca_fm_kwconv_green/*
+!/Results/training/aam_ebca_fm_kwconv_green/results.csv
+
+!/Results/graphs/
+/Results/graphs/*
+!/Results/graphs/*.png
+
+!/Results/csv/
+/Results/csv/*
+!/Results/csv/*.csv
+
+!/Results/validation/
+/Results/validation/*
+!/Results/validation/*.json
 
 *.mp4
 *.avi
