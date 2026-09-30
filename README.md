@@ -1,16 +1,43 @@
 # AAM, EBCA, FM, KWConv
 
-Green/yellow apple detection, relative-depth localization, and duplicate-safe orchard tracking.
+Cell-by-cell research workflow for green-apple detection, relative-depth localization, and duplicate-safe orchard counting.
 
-## Research objectives
+## Objectives
 
-- Detect small, overlapping, and partially occluded apples with AAM, EBCA, FM, and KWConv feature enhancement.
-- Use AdaBins-derived relative depth to separate foreground from background fruit and support association.
-- Maintain IDs with a two-stage, depth-aware ByteTrack-style tracker and count each valid track only once.
+- Detect small, overlapping, and partially occluded green apples with an enhanced YOLOv8 neck: Attribute Attention Module (AAM), Efficient Bidirectional Cross-Attention (EBCA), Focal Modulation (FM), and Kernel Warehouse Convolution (KWConv).
+- Estimate relative pixel depth with AdaBins to separate foreground/background fruit and support spatial association.
+- Use a depth-aware, two-stage ByteTrack-style tracker to maintain fruit IDs and avoid duplicate counts across video frames.
 
-## Run the notebook
+## Notebook workflow
 
-Open [AAM, EBCA, FM, KWConv 100.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100.ipynb>) and run its cells in order. The reusable implementation is [fruit_pipeline.py](Codeing/fruit_pipeline.py).
+Open [AAM, EBCA, FM, KWConv 100.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100.ipynb>) and run cells in order.
+
+1. Check PyTorch, CUDA, and NVIDIA-driver availability.
+2. Inspect `Dataset/DJI_0418.MP4`: 3,825 source frames at 59.940 FPS, 1,920×1,080.
+3. Create a timestamp-accurate 80-FPS timeline: **5,105 frames**. As the source is below 80 FPS, repeated source-frame indices are documented in the manifest rather than producing artificial camera frames.
+4. Uniformly select exactly **800** frames.
+5. Create **10 augmentations per selected frame**: 8,000 variants, 8,800 images in total.
+6. Keep each original image and all its variants together in the grouped 70/10/20 split: 560/80/160 source groups and 6,160/880/1,760 train/validation/test images.
+7. After splitting, create single-class `green_apple` YOLO labels automatically from COCO-pretrained YOLOv8 apple proposals using full-frame and overlapping-tile inference.
+8. Audit labels, construct/test AAM, EBCA, FM, and KWConv, then train the enhanced YOLOv8 model for all configured epochs (`patience=0`).
+9. Save precision, recall, F1, mAP, plots, checkpoints, relative-depth outputs, IDs, tracked video, and unique fruit count under `Results/`.
+
+The `RUN_...` flags make expensive or file-writing stages explicit. They are `False` initially; set them to `True` only when ready to execute that stage. The source video is never changed.
+
+## Layout
+
+```text
+Codeing/
+  AAM, EBCA, FM, KWConv 100.ipynb  # documented research notebook
+  AAM, EBCA, FM, KWConv 100 (5) (3).ipynb  # supplied reference notebook
+  fruit_pipeline.py                # reusable workflow and model implementation
+  requirements.txt
+Dataset/                            # local-only: video, frames, images, labels, manifests
+Results/                            # local-only: audits, training, metrics, video, tracks
+third_party/AdaBins/                # local AdaBins source/checkpoint (not committed)
+```
+
+## Setup
 
 ```bash
 python3 -m venv .venv
@@ -19,12 +46,12 @@ python3 -m venv .venv
 .venv/bin/python -m ipykernel install --user --name fruitvision --display-name "FruitVision (.venv)"
 ```
 
-The main environment includes the CPU builds of PyTorch, Ultralytics YOLOv8, JupyterLab, LabelImg, OpenCV, and SciPy. The local install also includes the official outdoor AdaBins source/checkpoint in `third_party/AdaBins/`; it is excluded from Git because the checkpoint is large and AdaBins is GPL-3.0. Use its output only as relative depth until the orchard camera is calibrated.
+For full training, use an NVIDIA driver and a CUDA-enabled PyTorch build. Cell 02 records the actual runtime state; it does not assume that a visible GPU is usable.
 
-The workflow saves extracted frames, seed candidates, manually verified labels, augmentations, and YOLO splits under `Dataset/`; it saves architecture checks, training outputs, metrics, annotated videos, track CSVs, and summaries under `Results/`.
+## Evaluation note
 
-`DJI_0418.MP4` currently cannot be decoded because its MP4 index (`moov` atom) is missing. Re-export it from the source device as a playable H.264 MP4 and replace `Dataset/DJI_0418.MP4` before running extraction. The notebook detects this safely and does not overwrite the source video.
+Automatic COCO-derived labels are pseudo-labels. They enable a fully automatic dataset-building experiment, but they cannot establish a scientifically valid claim such as “above 90% precision” when the held-out labels originate from the same detector. For a defensible precision/recall/F1 result, evaluate the final model on independently created ground-truth annotations. The notebook still saves all model-output metrics and makes this distinction explicit.
 
-## Data policy
+## Data and result policy
 
-`Dataset/` and `Results/` are local-only and excluded from Git. Green/yellow HSV candidates are only a review aid—green foliage can be confused with green apples—so train only on labels saved in `Dataset/labels/verified/`. Splitting occurs before training augmentation to prevent temporal leakage from neighbouring video frames.
+`Dataset/`, `Results/`, checkpoints, videos, generated frames, labels, and third-party AdaBins weights are ignored by Git. The repository stores the implementation, notebook, dependencies, and documentation only.

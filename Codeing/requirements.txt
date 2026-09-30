@@ -10,9 +10,10 @@ gdown>=5.2
 torch>=2.2
 ultralytics>=8.3
 
-# Notebook and desktop annotation application
+# Notebook execution
 jupyterlab>=4.0
 ipykernel>=6.0
-labelImg>=1.8.6
 
-# AdaBins is installed from its official repository separately; see notebook cell 10.
+# AdaBins is installed from its official repository separately; see notebook Cell 15.
+# For NVIDIA training, replace the CPU torch package with the CUDA build matching
+# the installed NVIDIA driver before enabling the full-training notebook cell.
