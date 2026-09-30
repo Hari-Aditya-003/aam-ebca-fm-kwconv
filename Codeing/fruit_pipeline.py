@@ -8,6 +8,7 @@ entry point; this module keeps each notebook cell short and reproducible.
 from __future__ import annotations
 
 import csv
+import platform
 import json
 import math
 import os
@@ -222,7 +223,14 @@ def require_playable_video(video_path: str | Path, *, target_fps: float = 80.0) 
 
 def hardware_report(paths: ProjectPaths) -> dict[str, Any]:
     """Record CUDA/NVIDIA status; the notebook chooses GPU only if it is usable."""
-    report: dict[str, Any] = {}
+    running_kernel = platform.release()
+    # ``nvidiafb`` and laptop backlight helpers do not provide CUDA.  Check the
+    # actual proprietary/open compute-driver module specifically.
+    nvidia_modules = sorted(Path(f"/lib/modules/{running_kernel}").rglob("nvidia.ko*")) if Path(f"/lib/modules/{running_kernel}").exists() else []
+    report: dict[str, Any] = {
+        "running_kernel": running_kernel,
+        "nvidia_kernel_module_present": bool(nvidia_modules),
+    }
     try:
         import torch
 
@@ -253,6 +261,20 @@ def hardware_report(paths: ProjectPaths) -> dict[str, Any]:
     except (FileNotFoundError, subprocess.TimeoutExpired) as error:
         report["nvidia_smi"] = str(error)
     report["recommended_device"] = 0 if report.get("cuda_available") else "cpu"
+    if not report["cuda_available"]:
+        remediation: list[str] = []
+        if not report["nvidia_kernel_module_present"]:
+            remediation.append(
+                "No NVIDIA kernel module is installed for the running kernel. "
+                "Install the matching Ubuntu linux-modules-nvidia package, then reboot."
+            )
+        if str(report.get("torch_version", "")).endswith("+cpu"):
+            remediation.append(
+                "PyTorch is CPU-only. After nvidia-smi succeeds, install a CUDA-enabled PyTorch build in .venv."
+            )
+        if not remediation:
+            remediation.append("Check nvidia-smi, the NVIDIA driver service, and the CUDA-enabled PyTorch installation.")
+        report["cuda_remediation"] = remediation
     _write_json(paths.hardware_results / "runtime.json", report)
     return report
 
