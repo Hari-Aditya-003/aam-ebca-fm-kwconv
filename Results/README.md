@@ -1,28 +1,32 @@
 # Results
 
-This directory publishes lightweight, aggregate experiment evidence only. The source video, extracted frames, augmentations, labels, dataset previews, model checkpoints, and generated videos are intentionally excluded from Git.
+This directory publishes the completed aggregate results plus final videos and detector checkpoints through Git LFS. Source frames, augmentations, labels, dataset previews, and third-party AdaBins files remain excluded.
 
-## Training snapshot
+## Completed training and validation
 
-Snapshot time: **30 September 2026, 20:56 IST** (`2026-09-30T15:26:45Z`). Training was active and had completed **65/300 epochs (21.7%)**.
+The enhanced detector completed **300/300 epochs**. The selected checkpoint is `best.pt` from epoch 24.
 
-| Metric | Latest value (epoch 65) | Best value observed | Epoch of best |
-|---|---:|---:|---:|
-| Precision | 0.80084 | 0.82107 | 36 |
-| Recall | 0.71182 | 0.71746 | 48 |
-| mAP@0.50 | 0.79950 | 0.81440 | 28 |
-| mAP@0.50:0.95 | 0.57659 | 0.58744 | 24 |
-
-The best checkpoint at this snapshot corresponds to epoch 24 under the Ultralytics detection fitness score. Training is unfinished, so these values may change.
+| Metric | Final `best.pt` validation |
+|---|---:|
+| Precision | 0.80431 |
+| Recall | 0.71415 |
+| F1 | 0.75649 |
+| mAP@0.50 | 0.80977 |
+| mAP@0.50:0.95 | 0.58741 |
 
 ## Published artifacts
 
 - [`status/live_training_status.json`](status/live_training_status.json): portable status and metric summary.
-- [`training/aam_ebca_fm_kwconv_green/results.csv`](training/aam_ebca_fm_kwconv_green/results.csv): one row per completed epoch through epoch 65.
+- [`training/aam_ebca_fm_kwconv_green/results.csv`](training/aam_ebca_fm_kwconv_green/results.csv): one row for each of the 300 completed epochs.
 - [`architecture/module_smoke_test.json`](architecture/module_smoke_test.json): output shapes and AAM → EBCA → FM → KWConv module order.
 - [`hardware/runtime.json`](hardware/runtime.json): recorded CUDA, PyTorch, and GPU runtime.
+- [`csv/final_validation_metrics.csv`](csv/final_validation_metrics.csv): final best-checkpoint validation metrics.
+- [`graphs/`](graphs/): F1, precision, recall, PR, and confusion-matrix plots.
+- [`inference/apples_id_depth.mp4`](inference/apples_id_depth.mp4), [`apples_confidence_depth.mp4`](inference/apples_confidence_depth.mp4), and [`apples_id_confidence.mp4`](inference/apples_id_confidence.mp4): final annotated videos.
+- [`csv/apple_detections_confidence_depth.csv`](csv/apple_detections_confidence_depth.csv) and [`apple_tracks_id_confidence_depth.csv`](csv/apple_tracks_id_confidence_depth.csv): frame-level corrected relative-depth and tracking tables.
+- `training/aam_ebca_fm_kwconv_green/weights/{best,last}.pt`: LFS-hosted model checkpoints.
 
-Final validation curves, confusion matrices, inference tables, and tracked-video summaries will be added only after the configured 300-epoch run completes. Large `.pt` checkpoints and videos remain local.
+The displayed `D` value is relative depth, not metres. It combines high-resolution AdaBins output with a conservative apparent-apple-scale correction because raw AdaBins smoothed small fruit into surrounding foliage. Recreate the videos from the published tables with `python Codeing/render_result_videos.py`; use `--encoder h264_nvenc` when NVIDIA FFmpeg encoding is available.
 
 ## Interpretation
 

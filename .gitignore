@@ -51,6 +51,19 @@
 *.tar
 *.gz
 
+# Final reproducible artifacts explicitly published through Git LFS.
+!/Results/inference/
+/Results/inference/*
+!/Results/inference/apples_id_depth.mp4
+!/Results/inference/apples_confidence_depth.mp4
+!/Results/inference/apples_id_confidence.mp4
+!/Results/inference/apple_video_export_summary.json
+
+!/Results/training/aam_ebca_fm_kwconv_green/weights/
+/Results/training/aam_ebca_fm_kwconv_green/weights/*
+!/Results/training/aam_ebca_fm_kwconv_green/weights/best.pt
+!/Results/training/aam_ebca_fm_kwconv_green/weights/last.pt
+
 # Local Python environment and caches
 __pycache__/
 *.py[cod]

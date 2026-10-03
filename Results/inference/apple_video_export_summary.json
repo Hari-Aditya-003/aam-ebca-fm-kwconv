@@ -1,0 +1,58 @@
+{
+  "source_video": "Dataset/DJI_0418.MP4",
+  "weights": "Results/training/aam_ebca_fm_kwconv_green/weights/best.pt",
+  "frames_processed": 3825,
+  "source_fps": 59.94005994005994,
+  "width": 1920,
+  "height": 1080,
+  "detection_image_size": 640,
+  "depth_input_size": [
+    928,
+    512
+  ],
+  "detection_confidence": 0.1,
+  "adabins_checkpoint": "third_party/AdaBins/pretrained/AdaBins_kitti.pt",
+  "adabins_relative_depth": true,
+  "tracker": "depth-aware ByteTrack-style",
+  "count_line": [
+    [
+      0,
+      540
+    ],
+    [
+      1919,
+      540
+    ]
+  ],
+  "raw_detection_rows": 272384,
+  "confirmed_track_rows": 210774,
+  "created_track_ids": 1815,
+  "unique_line_crossing_count": 106,
+  "videos": {
+    "id_depth": "Results/inference/apples_id_depth.mp4",
+    "confidence_depth": "Results/inference/apples_confidence_depth.mp4",
+    "id_confidence": "Results/inference/apples_id_confidence.mp4"
+  },
+  "detections_csv": "Results/csv/apple_detections_confidence_depth.csv",
+  "tracks_csv": "Results/csv/apple_tracks_id_confidence_depth.csv",
+  "elapsed_seconds": 929.182,
+  "annotation_style": {
+    "labels": "shortcuts only: ID, C, D",
+    "font_scale": 0.78,
+    "font_thickness": 2,
+    "box_thickness": 4,
+    "box_black_outline": 7,
+    "large_count_banner": false,
+    "count_line_visible": false
+  },
+  "videos_replaced_with_readable_annotations": true,
+  "videos_replaced_without_count_overlay": true,
+  "depth_method": "AdaBins raw depth fused with apparent apple scale",
+  "depth_formula": "relative_depth = adabins_depth_raw * clip((frame_reference_diameter / box_diameter)^0.65, 0.5, 2.5)",
+  "depth_interpretation": "relative only; lower is nearer and higher is farther; not metres",
+  "corrected_depth_percentiles": {
+    "p10": 2.854254744715552,
+    "p50": 3.574456233323801,
+    "p90": 6.0230252625356195
+  }
+}

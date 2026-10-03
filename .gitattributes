@@ -1,0 +1,4 @@
+Results/inference/*.mp4 filter=lfs diff=lfs merge=lfs -text
+Results/training/aam_ebca_fm_kwconv_green/weights/*.pt filter=lfs diff=lfs merge=lfs -text
+Results/csv/apple_detections_confidence_depth.csv filter=lfs diff=lfs merge=lfs -text
+Results/csv/apple_tracks_id_confidence_depth.csv filter=lfs diff=lfs merge=lfs -text
