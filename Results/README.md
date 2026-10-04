@@ -28,6 +28,14 @@ The enhanced detector completed **300/300 epochs**. The selected checkpoint is `
 
 The displayed `D` value is relative depth, not metres. It combines high-resolution AdaBins output with a conservative apparent-apple-scale correction because raw AdaBins smoothed small fruit into surrounding foliage. Recreate the videos from the published tables with `python Codeing/render_result_videos.py`; use `--encoder h264_nvenc` when NVIDIA FFmpeg encoding is available.
 
+## Five-unit filtered presentation export
+
+`Codeing/export_max5m_videos_and_frames.py` creates three presentation variants under `Results/inference/max5m_estimated/`: apple and confidence; apple, confidence, and depth; and apple, confidence, depth, and track ID. It removes every annotation whose corrected depth is greater than 5.0 and saves every annotated detection frame into the matching subfolder under `Results/frames/max5m_estimated/`.
+
+The video labels use `m est.` only as a requested presentation label. These monocular values have not been camera-calibrated or verified as physical metres, so they must be described as estimated depth rather than measured distance in the paper.
+
+The filtered result contains **96 duplicate-safe line-crossing apples**. The large frame folders remain local and are intentionally excluded from Git; the three filtered videos and their JSON summary are published through Git LFS.
+
 ## Interpretation
 
 The validation labels were generated from COCO-pretrained detector proposals. These metrics measure agreement against pseudo-labels, not performance against independently annotated ground truth. A defensible final precision, recall, F1, or mAP claim requires a separate human-annotated evaluation set.

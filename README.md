@@ -46,6 +46,7 @@ Codeing/
   AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb  # monitoring and result export
   resume_training.py                # guarded exact-checkpoint resume launcher
   render_result_videos.py           # rebuild final videos from published CSVs
+  export_max5m_videos_and_frames.py # filtered videos and local annotated frames
   AAM, EBCA, FM, KWConv 100 (5) (3).ipynb  # supplied reference notebook
   requirements.txt
 Dataset/                            # local-only: video, frames, images, labels, manifests

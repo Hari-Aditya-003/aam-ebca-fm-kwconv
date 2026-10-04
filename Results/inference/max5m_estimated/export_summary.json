@@ -1,0 +1,41 @@
+{
+  "source_video": "Dataset/DJI_0418.MP4",
+  "frames_processed": 3825,
+  "source_fps": 59.94005994005994,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "filter": "relative_depth <= 5",
+  "display_unit": "m est.",
+  "depth_warning": "Estimated monocular AdaBins-derived depth with apparent-scale correction; not camera-calibrated or verified physical metres.",
+  "kept_boxes": {
+    "apple_confidence": 212261,
+    "apple_confidence_depth": 212261,
+    "apple_confidence_depth_id": 178258
+  },
+  "saved_annotated_frames": {
+    "apple_confidence": 3825,
+    "apple_confidence_depth": 3825,
+    "apple_confidence_depth_id": 3823
+  },
+  "filtered_unique_line_crossing_count": 96,
+  "count_line_y": 540.0,
+  "videos": {
+    "apple_confidence": "Results/inference/max5m_estimated/apple_confidence_max5m_estimated.mp4",
+    "apple_confidence_depth": "Results/inference/max5m_estimated/apple_confidence_depth_max5m_estimated.mp4",
+    "apple_confidence_depth_id": "Results/inference/max5m_estimated/apple_confidence_depth_id_max5m_estimated.mp4"
+  },
+  "frame_folders": {
+    "apple_confidence": "Results/frames/max5m_estimated/apple_confidence",
+    "apple_confidence_depth": "Results/frames/max5m_estimated/apple_confidence_depth",
+    "apple_confidence_depth_id": "Results/frames/max5m_estimated/apple_confidence_depth_id"
+  },
+  "labels": {
+    "apple_confidence": "apple + confidence",
+    "apple_confidence_depth": "apple + confidence + estimated depth",
+    "apple_confidence_depth_id": "apple + confidence + estimated depth + track ID"
+  },
+  "count_overlay": false,
+  "elapsed_seconds": 212.283
+}

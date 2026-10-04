@@ -58,6 +58,12 @@
 !/Results/inference/apples_confidence_depth.mp4
 !/Results/inference/apples_id_confidence.mp4
 !/Results/inference/apple_video_export_summary.json
+!/Results/inference/max5m_estimated/
+/Results/inference/max5m_estimated/*
+!/Results/inference/max5m_estimated/apple_confidence_max5m_estimated.mp4
+!/Results/inference/max5m_estimated/apple_confidence_depth_max5m_estimated.mp4
+!/Results/inference/max5m_estimated/apple_confidence_depth_id_max5m_estimated.mp4
+!/Results/inference/max5m_estimated/export_summary.json
 
 !/Results/training/aam_ebca_fm_kwconv_green/weights/
 /Results/training/aam_ebca_fm_kwconv_green/weights/*
