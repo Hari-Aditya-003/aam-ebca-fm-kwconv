@@ -34,6 +34,10 @@ The displayed `D` value is relative depth, not metres. It combines high-resoluti
 
 The video labels use `m est.` only as a requested presentation label. These monocular values have not been camera-calibrated or verified as physical metres, so they must be described as estimated depth rather than measured distance in the paper.
 
+## Full unfiltered confidence-only video
+
+[`inference/apple_confidence_all_detections.mp4`](inference/apple_confidence_all_detections.mp4) renders all 272,384 detections from the combined AAM + EBCA + FM + KWConv detector. It shows only `apple` and the confidence score; no depth filter, depth value, tracking ID, count, or counting line is applied. Recreate it with `python Codeing/export_all_apple_confidence_video.py`.
+
 The filtered result contains **96 duplicate-safe line-crossing apples**. The large frame folders remain local and are intentionally excluded from Git; the three filtered videos and their JSON summary are published through Git LFS.
 
 ## Interpretation

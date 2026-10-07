@@ -1,0 +1,20 @@
+{
+  "source_video": "Dataset/DJI_0418.MP4",
+  "output_video": "Results/inference/apple_confidence_all_detections.mp4",
+  "detector": "combined AAM + EBCA + FM + KWConv enhanced YOLO detector",
+  "weights": "Results/training/aam_ebca_fm_kwconv_green/weights/best.pt",
+  "frames_processed": 3825,
+  "frames_with_detections": 3825,
+  "detections_rendered": 272384,
+  "source_fps": 59.94005994005994,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "depth_filter_applied": false,
+  "label": "apple + confidence",
+  "depth_visible": false,
+  "track_id_visible": false,
+  "count_visible": false,
+  "elapsed_seconds": 49.376
+}

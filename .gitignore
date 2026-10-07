@@ -58,6 +58,8 @@
 !/Results/inference/apples_confidence_depth.mp4
 !/Results/inference/apples_id_confidence.mp4
 !/Results/inference/apple_video_export_summary.json
+!/Results/inference/apple_confidence_all_detections.mp4
+!/Results/inference/apple_confidence_all_detections_summary.json
 !/Results/inference/max5m_estimated/
 /Results/inference/max5m_estimated/*
 !/Results/inference/max5m_estimated/apple_confidence_max5m_estimated.mp4
