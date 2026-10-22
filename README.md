@@ -26,6 +26,8 @@ These are provisional metrics against automatically generated pseudo-labels, not
 
 Open [AAM, EBCA, FM, KWConv 100.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100.ipynb>) and run cells in order. Use [AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb](<Codeing/AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb>) to inspect progress and generate final result artifacts without changing the training workflow.
 
+For a line-addressable Python version of the complete workflow, use [`Codeing/aam_ebca_fm_kwconv_main.py`](Codeing/aam_ebca_fm_kwconv_main.py). The formula-to-code audit is available as [Markdown](Documentation/AAM_EBCA_FM_KWConv_Technical_Documentation.md) and [DOCX](Documentation/AAM_EBCA_FM_KWConv_Technical_Documentation.docx).
+
 1. Check PyTorch, CUDA, and NVIDIA-driver availability.
 2. Inspect `Dataset/DJI_0418.MP4`: 3,825 source frames at 59.940 FPS, 1,920×1,080.
 3. Create a timestamp-accurate 80-FPS timeline: **5,105 frames**. As the source is below 80 FPS, repeated source-frame indices are documented in the manifest rather than producing artificial camera frames.
@@ -43,7 +45,9 @@ The `RUN_...` flags make expensive or file-writing stages explicit. They are `Fa
 ```text
 Codeing/
   AAM, EBCA, FM, KWConv 100.ipynb  # documented research notebook
+  aam_ebca_fm_kwconv_main.py        # complete line-addressable Python source
   AAM, EBCA, FM, KWConv 100 - Results and Status.ipynb  # monitoring and result export
+  build_technical_document.py       # rebuild the DOCX from Markdown
   resume_training.py                # guarded exact-checkpoint resume launcher
   render_result_videos.py           # rebuild final videos from published CSVs
   export_max5m_videos_and_frames.py # filtered videos and local annotated frames
@@ -52,6 +56,7 @@ Codeing/
   requirements.txt
 Dataset/                            # local-only: video, frames, images, labels, manifests
 Results/                            # reports plus LFS-hosted final videos and checkpoints
+Documentation/                      # formula-to-code technical document (MD and DOCX)
 third_party/AdaBins/                # local AdaBins source/checkpoint (not committed)
 ```
 

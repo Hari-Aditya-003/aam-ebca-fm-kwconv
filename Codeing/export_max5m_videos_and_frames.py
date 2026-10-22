@@ -25,6 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_VIDEO = PROJECT_ROOT / "Dataset" / "DJI_0418.MP4"
 DETECTIONS_CSV = PROJECT_ROOT / "Results" / "csv" / "apple_detections_confidence_depth.csv"
 TRACKS_CSV = PROJECT_ROOT / "Results" / "csv" / "apple_tracks_id_confidence_depth.csv"
+REMOVALS_CSV = PROJECT_ROOT / "Codeing" / "config" / "bytetrack_removals.csv"
 VIDEO_DIR = PROJECT_ROOT / "Results" / "inference" / "max5m_estimated"
 FRAME_DIR = PROJECT_ROOT / "Results" / "frames" / "max5m_estimated"
 
@@ -92,12 +93,34 @@ def draw_box(image, row: dict[str, str], label: str, colour: tuple[int, int, int
     cv2.putText(image, label, (text_x, text_y), font, scale, colour, thickness, cv2.LINE_AA)
 
 
-def prepare_directories(video_dir: Path, frame_dir: Path) -> dict[str, Path]:
+def load_removals(path: Path | None) -> set[tuple[int, int]]:
+    if path is None:
+        return set()
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    with path.open(encoding="utf-8", newline="") as handle:
+        rows = csv.DictReader(handle)
+        if rows.fieldnames != ["frame", "track_id"]:
+            raise ValueError(f"Removal CSV must contain exactly frame,track_id columns: {path}")
+        return {(int(row["frame"]), int(row["track_id"])) for row in rows}
+
+
+def intersection_over_union(first: dict[str, str], second: dict[str, str]) -> float:
+    ax1, ay1, ax2, ay2 = (float(first[key]) for key in ("x1", "y1", "x2", "y2"))
+    bx1, by1, bx2, by2 = (float(second[key]) for key in ("x1", "y1", "x2", "y2"))
+    intersection_width = max(0.0, min(ax2, bx2) - max(ax1, bx1))
+    intersection_height = max(0.0, min(ay2, by2) - max(ay1, by1))
+    intersection = intersection_width * intersection_height
+    union = (ax2 - ax1) * (ay2 - ay1) + (bx2 - bx1) * (by2 - by1) - intersection
+    return intersection / max(union, 1e-9)
+
+
+def prepare_directories(video_dir: Path, frame_dir: Path, overwrite: bool) -> dict[str, Path]:
     video_dir.mkdir(parents=True, exist_ok=True)
     folders = {category: frame_dir / category for category in CATEGORIES}
     for folder in folders.values():
         folder.mkdir(parents=True, exist_ok=True)
-        if any(folder.iterdir()):
+        if not overwrite and any(folder.iterdir()):
             raise FileExistsError(
                 f"Frame folder is not empty: {folder}. Move or remove the old export before rerunning."
             )
@@ -113,11 +136,14 @@ def export(
     max_depth: float,
     encoder: str,
     jpeg_quality: int,
+    removals_csv: Path | None,
+    overwrite: bool,
 ) -> dict[str, object]:
     for required in (source, detections_csv, tracks_csv):
         if not required.is_file():
             raise FileNotFoundError(required)
-    frame_folders = prepare_directories(video_dir, frame_dir)
+    removal_pairs = load_removals(removals_csv)
+    frame_folders = prepare_directories(video_dir, frame_dir, overwrite)
     video_paths = {
         category: video_dir / f"{category}_max{max_depth:g}m_estimated.mp4"
         for category in CATEGORIES
@@ -135,6 +161,8 @@ def export(
     kept_box_counts = {category: 0 for category in CATEGORIES}
     previous_track_sides: dict[int, float] = {}
     crossing_track_ids: set[int] = set()
+    found_removal_pairs: set[tuple[int, int]] = set()
+    matched_detection_removals = 0
     started = time.monotonic()
 
     try:
@@ -160,6 +188,25 @@ def export(
                 track_rows = [
                     row for row in tracks.at(frame_index)
                     if row.get("relative_depth") and float(row["relative_depth"]) <= max_depth
+                ]
+                excluded_tracks = [
+                    row for row in track_rows
+                    if (frame_index, int(row["track_id"])) in removal_pairs
+                ]
+                for excluded_track in excluded_tracks:
+                    pair = (frame_index, int(excluded_track["track_id"]))
+                    found_removal_pairs.add(pair)
+                    if detection_rows:
+                        matched_detection = max(
+                            detection_rows,
+                            key=lambda row: intersection_over_union(excluded_track, row),
+                        )
+                        if intersection_over_union(excluded_track, matched_detection) >= 0.95:
+                            detection_rows.remove(matched_detection)
+                            matched_detection_removals += 1
+                track_rows = [
+                    row for row in track_rows
+                    if (frame_index, int(row["track_id"])) not in removal_pairs
                 ]
                 images = {category: frame.copy() for category in CATEGORIES}
 
@@ -228,6 +275,15 @@ def export(
         if failures:
             raise RuntimeError("ffmpeg encoder failure: " + ", ".join(failures))
 
+    missing_removal_pairs = sorted(removal_pairs - found_removal_pairs)
+    if missing_removal_pairs:
+        raise RuntimeError(f"Requested ByteTrack removals were not found: {missing_removal_pairs}")
+    if matched_detection_removals != len(removal_pairs):
+        raise RuntimeError(
+            "Could not match every removed track to a detector box: "
+            f"matched={matched_detection_removals}, requested={len(removal_pairs)}"
+        )
+
     summary: dict[str, object] = {
         "source_video": str(source.relative_to(PROJECT_ROOT)),
         "frames_processed": frame_index,
@@ -243,6 +299,11 @@ def export(
         "saved_annotated_frames": output_frame_counts,
         "filtered_unique_line_crossing_count": len(crossing_track_ids),
         "count_line_y": height / 2,
+        "suppressed_track_boxes": len(found_removal_pairs),
+        "suppressed_matching_detection_boxes": matched_detection_removals,
+        "suppression_manifest": (
+            str(removals_csv.relative_to(PROJECT_ROOT)) if removals_csv is not None else None
+        ),
         "videos": {category: str(path.relative_to(PROJECT_ROOT)) for category, path in video_paths.items()},
         "frame_folders": {
             category: str(path.relative_to(PROJECT_ROOT)) for category, path in frame_folders.items()
@@ -270,6 +331,8 @@ def main() -> int:
     parser.add_argument("--max-depth", type=float, default=5.0)
     parser.add_argument("--encoder", choices=("libx264", "h264_nvenc"), default="h264_nvenc")
     parser.add_argument("--jpeg-quality", type=int, choices=range(70, 101), default=90, metavar="70-100")
+    parser.add_argument("--removals-csv", type=Path, default=REMOVALS_CSV)
+    parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
     summary = export(
         args.source,
@@ -280,6 +343,8 @@ def main() -> int:
         args.max_depth,
         args.encoder,
         args.jpeg_quality,
+        args.removals_csv,
+        args.overwrite,
     )
     print(json.dumps(summary, indent=2))
     return 0

@@ -10,9 +10,9 @@
   "display_unit": "m est.",
   "depth_warning": "Estimated monocular AdaBins-derived depth with apparent-scale correction; not camera-calibrated or verified physical metres.",
   "kept_boxes": {
-    "apple_confidence": 212261,
-    "apple_confidence_depth": 212261,
-    "apple_confidence_depth_id": 178258
+    "apple_confidence": 212236,
+    "apple_confidence_depth": 212236,
+    "apple_confidence_depth_id": 178233
   },
   "saved_annotated_frames": {
     "apple_confidence": 3825,
@@ -21,6 +21,9 @@
   },
   "filtered_unique_line_crossing_count": 96,
   "count_line_y": 540.0,
+  "suppressed_track_boxes": 25,
+  "suppressed_matching_detection_boxes": 25,
+  "suppression_manifest": "Codeing/config/bytetrack_removals.csv",
   "videos": {
     "apple_confidence": "Results/inference/max5m_estimated/apple_confidence_max5m_estimated.mp4",
     "apple_confidence_depth": "Results/inference/max5m_estimated/apple_confidence_depth_max5m_estimated.mp4",
@@ -37,5 +40,5 @@
     "apple_confidence_depth_id": "apple + confidence + estimated depth + track ID"
   },
   "count_overlay": false,
-  "elapsed_seconds": 212.283
+  "elapsed_seconds": 226.76
 }

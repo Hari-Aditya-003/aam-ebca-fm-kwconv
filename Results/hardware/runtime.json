@@ -1,5 +1,5 @@
 {
-  "running_kernel": "7.0.0-34-generic",
+  "running_kernel": "7.0.0-38-generic",
   "nvidia_kernel_module_present": true,
   "torch_version": "2.14.0+cu132",
   "cuda_available": true,
@@ -10,6 +10,6 @@
     6
   ],
   "nvidia_smi_returncode": 0,
-  "nvidia_smi": "NVIDIA GeForce RTX 3050 Ti Laptop GPU, 595.91.07, 4096 MiB",
+  "nvidia_smi": "NVIDIA GeForce RTX 3050 Ti Laptop GPU, 595.99.02, 4096 MiB",
   "recommended_device": 0
 }
