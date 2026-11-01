@@ -2,7 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Hari-Aditya-003/aam-ebca-fm-kwconv?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/Hari-Aditya-003/aam-ebca-fm-kwconv?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/forks)
-[![Default branch](https://img.shields.io/badge/branch-main-2563eb?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/branches)
+[![Default branch](https://img.shields.io/badge/branch-main-2563eb?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/tree/main)
 
 Cell-by-cell research workflow for green-apple detection, relative-depth localization, and duplicate-safe orchard counting.
 
@@ -79,7 +79,8 @@ git lfs pull
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -r Codeing/requirements.txt
-.venv/bin/python -m ipykernel install --user --name fruitvision --display-name "FruitVision (.venv)"
+fruitvision_kernel="fruitvision-$(.venv/bin/python -c 'import uuid; print(uuid.uuid4().hex[:12])')"
+.venv/bin/python -m ipykernel install --user --name "$fruitvision_kernel" --display-name "FruitVision ($fruitvision_kernel)"
 ```
 
 For full training, use an NVIDIA driver and a CUDA-enabled PyTorch build. Cell 02 records the actual runtime state; it does not assume that a visible GPU is usable.

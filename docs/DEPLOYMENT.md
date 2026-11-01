@@ -26,13 +26,15 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r Codeing/requirements.txt
-python -m ipykernel install --user --name fruitvision --display-name "FruitVision (.venv)"
+fruitvision_kernel="fruitvision-$(python -c 'import uuid; print(uuid.uuid4().hex[:12])')"
+python -m ipykernel install --user --name "$fruitvision_kernel" --display-name "FruitVision ($fruitvision_kernel)"
 ```
 
 For full training, install the CUDA-enabled PyTorch build appropriate to the machine's NVIDIA driver. Run the notebook's runtime diagnostic cell and confirm CUDA works before starting an expensive run. The requirement ranges are not a frozen environment; record the resolved versions:
 
 ```bash
-python -m pip freeze > experiment-environment.txt
+experiment_env="$(mktemp experiment-environment.XXXXXX)"
+python -m pip freeze > "$experiment_env"
 ```
 
 Keep this file with the experiment's results. Installing the requirements alone does not supply the video, dataset, or AdaBins checkpoint.
@@ -44,9 +46,25 @@ Keep this file with the experiment's results. Installing the requirements alone 
 | Source orchard video | `Dataset/DJI_0418.MP4` | Must be supplied locally |
 | Generated dataset | `Dataset/` | Created by the notebook; excluded from Git |
 | Detector checkpoints | `Results/training/aam_ebca_fm_kwconv_green/weights/` | Git LFS artifacts |
-| AdaBins source and model | `third_party/AdaBins/` and the checkpoint path configured in the notebook | Separate optional setup |
+| AdaBins source and model | `third_party/AdaBins/pretrained/AdaBins_kitti.pt` | Separate optional setup |
 
 Allow space for the generated dataset, approximately 36 GB according to the recorded run, plus exports and checkpoints. AdaBins depth is relative/estimated; it is not calibrated distance in metres.
+
+## Optional AdaBins setup
+
+Clone the [official AdaBins source](https://github.com/shariqfarooq123/AdaBins) into the expected location:
+
+```bash
+mkdir -p third_party
+git clone https://github.com/shariqfarooq123/AdaBins.git third_party/AdaBins
+python -m pip install matplotlib
+```
+
+Install a `torchvision` build matching your selected PyTorch/CUDA build. The adapter also uses the NumPy, SciPy, Pillow, and tqdm packages from the project requirements. Follow upstream model-loading requirements; the EfficientNet backbone may require a first-run network download.
+
+Download `AdaBins_kitti.pt` using the pretrained-model link in the official AdaBins README and place it at `third_party/AdaBins/pretrained/AdaBins_kitti.pt`. The adapter changes into the AdaBins source directory before creating `InferenceHelper(dataset="kitti")`, so the upstream relative checkpoint path resolves there. Record the upstream source SHA and checkpoint provenance with the experiment.
+
+If AdaBins is not installed, keep `RUN_ADABINS = False` in the main notebook and set `USE_ADABINS_RELATIVE_DEPTH = False` in the Results and Status notebook before enabling `RUN_VIDEO_EXPORTS`. That export notebook defaults depth to enabled and will otherwise fail on the missing checkpoint.
 
 ## 4. Execute the workflow deliberately
 
@@ -56,7 +74,7 @@ Start Jupyter from the repository root:
 python -m jupyterlab
 ```
 
-Open [the main notebook](../Codeing/AAM,%20EBCA,%20FM,%20KWConv%20100.ipynb), choose the FruitVision kernel, and confirm the root diagnostic points at this checkout. If the notebook kernel starts inside `Codeing/`, set its working directory to the repository root before the path-setup cell; the exported source otherwise falls back to the original author's workstation path.
+Open [the main notebook](../Codeing/AAM,%20EBCA,%20FM,%20KWConv%20100.ipynb), choose the uniquely named FruitVision kernel created above, and confirm the root diagnostic points at this checkout. If the notebook kernel starts inside `Codeing/`, set its working directory to the repository root before the path-setup cell; the exported source otherwise falls back to the original author's workstation path.
 
 Run cells in order. Review each `RUN_...` and `REBUILD_...` flag before enabling a stage. The workflow creates frames, augmentations, grouped splits, pseudo-labels, model modules, training results, validation, and optional depth/tracking outputs. Use a separate checkout or archive previous results before regeneration.
 
