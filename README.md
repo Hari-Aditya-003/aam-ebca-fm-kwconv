@@ -1,5 +1,9 @@
 # AAM, EBCA, FM, KWConv
 
+[![GitHub stars](https://img.shields.io/github/stars/Hari-Aditya-003/aam-ebca-fm-kwconv?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Hari-Aditya-003/aam-ebca-fm-kwconv?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/forks)
+[![Default branch](https://img.shields.io/badge/branch-main-2563eb?style=flat-square)](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/tree/main)
+
 Cell-by-cell research workflow for green-apple detection, relative-depth localization, and duplicate-safe orchard counting.
 
 ## Completed run
@@ -62,11 +66,21 @@ third_party/AdaBins/                # local AdaBins source/checkpoint (not commi
 
 ## Setup
 
+Clone with Git LFS before installing Python dependencies:
+
+```bash
+git lfs install
+git clone https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv.git
+cd aam-ebca-fm-kwconv
+git lfs pull
+```
+
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -r Codeing/requirements.txt
-.venv/bin/python -m ipykernel install --user --name fruitvision --display-name "FruitVision (.venv)"
+fruitvision_kernel="fruitvision-$(.venv/bin/python -c 'import uuid; print(uuid.uuid4().hex[:12])')"
+.venv/bin/python -m ipykernel install --user --name "$fruitvision_kernel" --display-name "FruitVision ($fruitvision_kernel)"
 ```
 
 For full training, use an NVIDIA driver and a CUDA-enabled PyTorch build. Cell 02 records the actual runtime state; it does not assume that a visible GPU is usable.
@@ -78,3 +92,11 @@ Automatic COCO-derived labels are pseudo-labels. They enable a fully automatic d
 ## Data and result policy
 
 `Dataset/` remains local because the generated dataset is approximately 36 GB. Final videos, prediction tables, and detector checkpoints are published through Git LFS. Generated frames, labels, dataset previews, and the third-party AdaBins repository/checkpoint remain excluded. Clone with Git LFS enabled to download the large result artifacts.
+
+## Documentation and contributions
+
+- [Deployment and operation](docs/DEPLOYMENT.md)
+- [Contributing](CONTRIBUTING.md): setup, checks, issue reports, and pull requests
+- [Branches](https://github.com/Hari-Aditya-003/aam-ebca-fm-kwconv/branches): `main` is the default branch; use a focused branch for each change.
+
+If this project helps you, consider starring it. Fork it to propose improvements, then open a pull request against `main`. The stars and forks badges above update from GitHub; they are not fixed counts.
